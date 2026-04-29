@@ -1,193 +1,162 @@
-# RAG-tabanl-yerel-yapay-zeka-sistemi-Pusula-
-Türkiye'deki öğrenciler için TEKNOFEST ve TÜBİTAK proje süreçlerinde yapay zeka destekli rehberlik sistemi.
+# Pusula – TEKNOFEST ve TÜBİTAK Proje Rehberliği İçin Fine-Tuned Yapay Zeka Sistemi
 
-Bu proje, Türkiye'deki lisans ve lisansüstü öğrencilerin TEKNOFEST ve TÜBİTAK başvuru süreçlerinde yapay zeka destekli rehberlik alabilmesi için geliştirilmektedir. Sistem, geçmiş proje raporlarını ve yarışma kılavuzlarını analiz ederek kullanıcıların sorularını kaynak göstererek yanıtlar.
+Türkiye'deki öğrenciler için TEKNOFEST ve TÜBİTAK proje süreçlerinde yapay zeka destekli rehberlik sunmayı amaçlayan bir proje.
+
+Bu proje, Türkiye'deki lisans ve lisansüstü öğrencilerin TEKNOFEST ve TÜBİTAK başvuru süreçlerinde daha doğru, daha tutarlı ve daha uygulanabilir rehberlik alabilmesi için geliştirilmektedir. Sistem, geçmiş proje raporları, başvuru metinleri ve proje yazım örneklerinden oluşturulan alan-özel bir veri kümesi üzerinde ince ayar yapılmış bir büyük dil modeli kullanır. Proje tamamlanınca dosyalar paylaşılacaktır süreç boyunca README güncellenecektir.
 
 ---
 
 ## Motivasyon
 
-TEKNOFEST ve TÜBİTAK başvuru süreçleri, özellikle ilk kez katılan öğrenciler için karmaşık olabiliyor. Proje amacını nasıl yazmalısın, metodoloji bölümünde ne bekleniliyor, jüri hangi kriterlere bakıyor gibi sorular genellikle net bir cevap bulamıyor. Danışman hocaya ulaşmak her zaman mümkün olmuyor, forumlardaki bilgiler ise çoğunlukla güncel değil.
+TEKNOFEST ve TÜBİTAK başvuru süreçleri, özellikle ilk kez başvuru yapacak öğrenciler için karmaşık ve belirsiz olabilir. Problem tanımı nasıl yazılmalı, amaç ve yöntem nasıl ayrılmalı, özgün değer nasıl kurulmalı, jüri hangi noktalara dikkat eder gibi sorular çoğu zaman net ve uygulanabilir cevaplar bulamaz.
 
-Bu sistemin amacı, yüzlerce geçmiş proje raporunu ve resmi kılavuzları okuyup sindirmiş bir "dijital danışman" oluşturmak. Kullanıcı bir soru sorduğunda sistem, gerçek raporlardan ilgili bölümleri bulup modele besliyor ve kaynak göstererek yanıt üretiyor.
+Bu projenin amacı, proje geliştirme ve proje yazımı süreçlerinde kullanıcılara dijital danışman benzeri destek sunan, alan-özel olarak eğitilmiş bir yapay zeka sistemi oluşturmaktır. Böylece kullanıcılar yalnızca genel amaçlı cevaplar değil, doğrudan TEKNOFEST ve TÜBİTAK bağlamına daha uygun rehberlik alabilir.
+
+---
+
+## Yaklaşım
+
+Projenin ilk aşamasında RAG tabanlı bir yapı düşünülmüş olsa da, daha tutarlı ve görev odaklı çıktılar elde edebilmek için doğrudan fine-tuning yaklaşımı tercih edilmiştir.
+
+Bu kapsamda:
+- TEKNOFEST ve TÜBİTAK proje yazımıyla ilişkili örneklerden oluşan 4000+ veri noktası hazırlanmıştır.
+- Önceden eğitilmiş bir büyük dil modeli bu alan-özel veri üzerinde fine-tune edilmiştir.
+- Modelin çıktıları, proje fikri netleştirme, rapor bölümü yazma, başlık/özet üretme, uygulanabilirlik değerlendirmesi ve sunum/jüri hazırlığı gibi görevler için yapılandırılmıştır.
+- Sistemin daha düzenli ve görev odaklı çalışabilmesi için skill tabanlı bir mimari kurulmuştur.
 
 ---
 
 ## Sistem Mimarisi
 
-Sistem iki ana katmandan oluşuyor:
+Sistem üç ana katmandan oluşur:
 
-**1. Veri Katmanı (Ingestion Pipeline)**
+### 1. Veri ve Eğitim Katmanı
+TEKNOFEST ve TÜBİTAK bağlamındaki proje metinleri, rapor örnekleri ve rehberlik içerikleri toplanır, temizlenir ve eğitim verisine dönüştürülür. Ardından bu veri kümesi ile önceden eğitilmiş LLM üzerinde fine-tuning yapılır.
 
-PDF formatındaki proje raporları ve kılavuzlar sisteme yüklenir, metinlere ayrılır ve anlam vektörlerine dönüştürülerek bir vektör veritabanında saklanır. Bu işlem bir kez yapılır, raporlar güncellendiğinde tekrarlanır.
+### 2. Davranış Katmanı
+Modelin hangi tonda, hangi kapsamda ve hangi görev mantığıyla cevap vereceğini belirlemek için sistem prompt, routing guide ve skill dosyaları kullanılır. Böylece model yalnızca metin üretmez; kullanıcının ihtiyacına göre doğru görev yapısına yönlendirilir.
 
-**2. Soru-Cevap Katmanı (RAG Pipeline)**
-
-Kullanıcı bir soru sorduğunda sistem önce vektör veritabanında en alakalı rapor bölümlerini bulur, ardından bu bölümleri yerel LLM modeline bağlam olarak sunar. Model, yalnızca bu bağlama dayanarak yanıt üretir ve hangi kaynaktan yararlandığını belirtir.
-
-```
-Kullanıcı sorusu
-      |
-      v
-Embedding modeli ile vektöre dönüştür
-      |
-      v
-ChromaDB'de en yakın belge parçalarını bul
-      |
-      v
-Qwen2.5 7B'ye bağlam + soru olarak ilet
-      |
-      v
-Yanıt + kaynak referansı
-```
+### 3. Uygulama Katmanı
+Kullanıcının sisteme erişebilmesi için web sitesi geliştirilmektedir. Bu katman, kullanıcıdan gelen proje sorularını alır, uygun yönlendirme mantığıyla modele iletir ve proje rehberliği çıktısını kullanıcıya sunar.
 
 ---
 
-## Teknoloji Yığını
+## Sağladığı Yetenekler
 
-| Katman | Teknoloji | Açıklama |
-|---|---|---|
-| LLM | Qwen2.5 7B (Q4_K_M) | Yerel çalışan, Türkçe performansı iyi model |
-| Model Servisi | Ollama | Yerel LLM yönetimi |
-| RAG Framework | LangChain | Retrieval pipeline |
-| Vektör Veritabanı | ChromaDB | Yerel, kurulum gerektirmiyor |
-| Embedding | sentence-transformers | Türkçe destekli çok dilli model |
-| PDF İşleme | PyMuPDF | Metin ve tablo çıkarımı |
-| Arayüz | Streamlit | Hızlı prototip UI |
+Sistem aşağıdaki görevlerde yardımcı olmayı hedefler:
 
-Tüm sistem internetsiz, yerel olarak çalışacak. Raporlar dışarıya gönderilmiyor.
+- Belirsiz proje fikirlerini netleştirme
+- Proje kapsamını daraltma
+- Problem tanımı oluşturma
+- Amaç, yöntem, özgün değer ve yaygın etki yazımı
+- TÜBİTAK başvuru mantığına uygun rehberlik
+- TEKNOFEST KTR/PTR ve teknik rapor desteği
+- Uygulanabilirlik ve risk analizi
+- Başlık, özet ve abstract üretimi
+- Sunum, pitch ve jüri hazırlığı
+
+---
+
+## Kullanılan Yaklaşım
+
+Projede genel amaçlı soru-cevap sistemi yerine, alan-özel ince ayar yapılmış bir model tercih edilmiştir. Bunun temel nedeni, kullanıcıların proje geliştirme ve rapor yazımı gibi görevlerde daha tutarlı, daha bağlama duyarlı ve daha yönlendirici cevaplar almasını sağlamaktır.
+
+Bu yaklaşım sayesinde sistem:
+- sadece bilgi veren bir yapı olmaktan çıkar,
+- görev odaklı proje danışmanlığına yaklaşır,
+- TEKNOFEST ve TÜBİTAK bağlamına daha uygun cevaplar üretir.
+
+---
+
+## Veri Kümesi
+
+Model eğitimi için kullanılan veri kümesi, TEKNOFEST ve TÜBİTAK proje süreçleriyle ilişkili içeriklerden oluşturulmuştur.
+
+Veri kümesi:
+- 4000+ veri noktasından oluşur
+- proje fikri geliştirme örnekleri içerir
+- rapor bölümü yazımı örnekleri içerir
+- başvuru rehberliği ve yapılandırılmış cevap örnekleri içerir
+- sunum ve jüri hazırlığına yönelik örnekleri içerir
+
+Bu veri kümesi, modeli genel amaçlı cevaplardan daha görev odaklı çıktılara yönlendirmek için hazırlanmıştır.
 
 ---
 
 ## Proje Yapısı
 
-```
-teknofest-rag/
-├── data/
-│   ├── reports/          # Ham PDF raporlar (git'e eklenmez)
-│   └── vectorstore/      # ChromaDB index
-├── src/
-│   ├── ingestion/
-│   │   ├── pdf_parser.py         # PDF'den metin çıkarma
-│   │   ├── chunker.py            # Metni parçalara bölme
-│   │   └── embedder.py           # Vektör oluşturma ve kaydetme
-│   ├── retrieval/
-│   │   ├── retriever.py          # ChromaDB sorgulama
-│   │   └── reranker.py           # Sonuçları yeniden sıralama
-│   ├── llm/
-│   │   ├── ollama_client.py      # Ollama API istemcisi
-│   │   └── prompt_templates.py   # Sistem ve kullanıcı promptları
-│   └── api/
-│       └── chain.py              # LangChain RAG zinciri
-├── frontend/
-│   └── app.py                    # Streamlit arayüzü
-├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   └── 02_rag_experiments.ipynb
-├── tests/
-│   ├── test_ingestion.py
-│   └── test_retrieval.py
-├── config.yaml                   # Model ve sistem ayarları
-├── requirements.txt
+```text
+project_root/
+├── system_prompt.md
+├── routing_guide.md
+├── integration_note.md
+├── sample_test_prompts.md
+├── skills/
+│   ├── README.md
+│   ├── shared/
+│   │   ├── output_style.md
+│   │   ├── question_policy.md
+│   │   └── competition_context.md
+│   ├── project_idea_refinement.md
+│   ├── report_section_writer.md
+│   ├── tubitak_application_guidance.md
+│   ├── teknofest_ktr_ptr_guidance.md
+│   ├── feasibility_and_risk_check.md
+│   ├── title_abstract_generator.md
+│   └── presentation_and_jury_preparation.md
 └── README.md
 ```
 
 ---
 
-## Kurulum
+## Geliştirme Durumu
 
-### Gereksinimler
-
-- Python 3.11+
-- [Ollama](https://ollama.ai) kurulu ve çalışıyor olmalı
-- 8GB+ RAM (model için)
-- 6GB VRAM (GPU inference için)
-
-### Adımlar
-
-```bash
-# Repoyu klonla
-git clone https://github.com/kullanici/teknofest-rag.git
-cd teknofest-rag
-
-# Sanal ortam oluştur
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Bağımlılıkları kur
-pip install -r requirements.txt
-
-# Modeli indir
-ollama pull qwen2.5:7b
-
-# Raporları sisteme yükle (PDF'leri data/reports/ altına koymuş olmalısın)
-python src/ingestion/embedder.py
-
-# Arayüzü başlat
-streamlit run frontend/app.py
-```
+Şu ana kadar:
+- veri kümesi hazırlanmıştır
+- model fine-tuning süreci tamamlanmıştır
+- skill tabanlı görev yapısı oluşturulmuştur
+- system prompt ve routing yapısı hazırlanmıştır
+- test senaryoları tanımlanmıştır
+- web sitesi geliştirme süreci başlatılmıştır
 
 ---
 
-## Kullanım
+## Hedef Kitle
 
-Sistem başlatıldıktan sonra tarayıcıda `http://localhost:8501` adresine git. Örnek sorular:
-
-- "TÜBİTAK 2204-A'da proje özeti nasıl yazılmalı?"
-- "TEKNOFEST savunma kategorisinde hangi belgeler isteniyor?"
-- "Geçen yıl kazanan yapay zeka projelerinde ortak neler var?"
-- "Literatür taraması bölümünde kaç kaynak olmalı?"
-
-Her yanıtın altında hangi raporlardan yararlandığı görünür.
+Bu sistem özellikle şu kullanıcılar için tasarlanmaktadır:
+- TEKNOFEST projesi hazırlayan öğrenciler
+- TÜBİTAK başvurusu yapacak lise ve üniversite öğrencileri
+- Proje fikrini netleştirmekte zorlanan ekipler
+- Proje raporu yazarken rehber desteğe ihtiyaç duyan kullanıcılar
 
 ---
 
-## Veri Kaynakları
+## Yol Haritası
 
-Sistem şu an aşağıdaki kaynaklarla besleniyor:
-
-- TEKNOFEST başvuru kılavuzları (2021-2024)
-- TÜBİTAK 2204-A/B proje rehberleri
-- Finale kalan proje raporları (~500 rapor, 40-70 sayfa arası)
-
-Raporlar gizlilik nedeniyle repoya eklenmemiştir. Sistemi kurmak isteyenler kendi kurumlarından raporları temin edebilir.
-
----
-
-## Geliştirme Yol Haritası
-
-- [x] Proje mimarisi tasarımı
-- [x] Teknoloji seçimi ve kıyaslaması
-- [ ] PDF ingestion pipeline
-- [ ] ChromaDB vektör indeksi
-- [ ] Temel RAG zinciri
-- [ ] Streamlit arayüzü (v1)
-- [ ] Türkçe embedding modeli karşılaştırması
-- [ ] Kaynak gösterimi ve alıntı sistemi
-- [ ] Performans değerlendirmesi (retrieval accuracy)
-- [ ] Kullanıcı geri bildirim mekanizması
+- [x] Proje mimarisi oluşturulması
+- [x] Veri kümesinin hazırlanması
+- [x] Fine-tuning sürecinin tamamlanması
+- [x] Skill tabanlı görev yapısının hazırlanması
+- [x] System prompt ve routing mantığının oluşturulması
+- [x] Model testlerinin tamamlanması
+- [ ] Web sitesi entegrasyonunun tamamlanması
+- [ ] Kullanıcı testleri ve geri bildirim toplanması
+- [ ] Cevap kalitesine göre prompt/skill revizyonları
 
 ---
 
-## Katkıda Bulunma
+## Amaç
 
-Proje aktif geliştirme aşamasında. Katkıda bulunmak isteyenler için iyi başlangıç noktaları:
-
-- Türkçe embedding modellerinin karşılaştırılması
-- Chunk boyutu ve overlap optimizasyonu
-- Reranking stratejileri
-- Arayüz iyileştirmeleri
-
-PR göndermeden önce bir issue açıp ne yapmak istediğini belirtmen yeterli.
+Bu proje, öğrencilerin proje üretme ve proje yazma süreçlerinde daha erişilebilir, daha tutarlı ve daha pratik bir dijital rehber sunmayı amaçlar. Nihai hedef, kullanıcıların TEKNOFEST ve TÜBİTAK süreçlerinde yalnızca genel öneriler değil, doğrudan ihtiyaçlarına uygun yönlendirme alabilmesidir.
 
 ---
 
 ## Lisans
 
-MIT License. Detaylar için [LICENSE](LICENSE) dosyasına bakabilirsin.
+Bu proje MIT License ile lisanslanmıştır.
 
 ---
 
 ## İletişim
 
-Proje hakkında soru veya önerileriniz için GitHub Issues kullanabilirsiniz.
+Proje hakkında soru veya öneriler için repo üzerinden iletişim kurulabilir.

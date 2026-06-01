@@ -123,7 +123,8 @@ project_root/
 - skill tabanlı görev yapısı oluşturulmuştur
 - system prompt ve routing yapısı hazırlanmıştır
 - test senaryoları tanımlanmıştır
-- web sitesi geliştirme süreci başlatılmıştır
+- web sitesi geliştirme süreci tamamlanmıştır.
+- Proje bitmiştir.
 
 ---
 

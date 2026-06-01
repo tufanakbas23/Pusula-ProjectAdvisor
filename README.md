@@ -145,9 +145,9 @@ Bu sistem özellikle şu kullanıcılar için tasarlanmaktadır:
 - [x] Skill tabanlı görev yapısının hazırlanması
 - [x] System prompt ve routing mantığının oluşturulması
 - [x] Model testlerinin tamamlanması
-- [ ] Web sitesi entegrasyonunun tamamlanması
-- [ ] Kullanıcı testleri ve geri bildirim toplanması
-- [ ] Cevap kalitesine göre prompt/skill revizyonları
+- [x] Web sitesi entegrasyonunun tamamlanması
+- [x] Kullanıcı testleri ve geri bildirim toplanması
+- [x] Cevap kalitesine göre prompt/skill revizyonları
 
 ---
 
